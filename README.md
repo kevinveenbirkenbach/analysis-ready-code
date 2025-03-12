@@ -1,4 +1,6 @@
 # 🤖👩‍🔬 Analysis-Ready Code (ARC)
+[![GitHub Sponsors](https://img.shields.io/badge/Sponsor-GitHub%20Sponsors-blue?logo=github)](https://github.com/sponsors/kevinveenbirkenbach) [![Patreon](https://img.shields.io/badge/Support-Patreon-orange?logo=patreon)](https://www.patreon.com/c/kevinveenbirkenbach) [![Buy Me a Coffee](https://img.shields.io/badge/Buy%20me%20a%20Coffee-Funding-yellow?logo=buymeacoffee)](https://buymeacoffee.com/kevinveenbirkenbach) [![PayPal](https://img.shields.io/badge/Donate-PayPal-blue?logo=paypal)](https://s.veen.world/paypaldonate)
+
 
 Analysis-Ready Code (ARC) is a Python-based utility designed to recursively scan directories and transform source code into a format optimized for AI and computer analysis. By stripping comments, filtering specific file types, and optionally compressing content, ARC ensures that your code is clean and ready for automated processing.
 

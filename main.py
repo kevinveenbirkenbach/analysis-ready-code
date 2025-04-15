@@ -19,7 +19,8 @@ def main():
                 compress=args.compress,
                 path_contains=args.path_contains,
                 content_contains=args.content_contains,
-                no_gitignore=args.no_gitignore
+                no_gitignore=args.no_gitignore,
+                scan_binary_files=args.scan_binary_files
             )
         elif os.path.isfile(path):
             if DirectoryHandler.should_print_file(
@@ -28,7 +29,8 @@ def main():
                 ignore_file_strings=args.ignore_file_strings,
                 ignore_hidden=args.ignore_hidden,
                 path_contains=args.path_contains,
-                content_contains=args.content_contains
+                content_contains=args.content_contains,
+                scan_binary_files=args.scan_binary_files
             ):
                 DirectoryHandler.handle_file(
                     path,
@@ -36,7 +38,8 @@ def main():
                     ignore_file_strings=args.ignore_file_strings,
                     ignore_hidden=args.ignore_hidden,
                     no_comments=args.no_comments,
-                    compress=args.compress
+                    compress=args.compress,
+                    scan_binary_files=args.scan_binary_files
                 )
         else:
             print(f"Error: {path} is neither a valid file nor a directory.")

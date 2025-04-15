@@ -20,11 +20,36 @@ class DirectoryHandler:
                         lines = f.readlines()
                     # Filter out empty lines and comments.
                     patterns = [line.strip() for line in lines if line.strip() and not line.strip().startswith('#')]
-                    # Save the base directory and its patterns
+                    # Save the base directory and its patterns.
                     gitignore_data.append((dirpath, patterns))
                 except Exception as e:
                     print(f"Error reading {gitignore_path}: {e}")
         return gitignore_data
+    
+    @staticmethod
+    def is_binary_file(file_path):
+        """
+        Reads the first 1024 bytes of file_path and heuristically determines
+        if the file appears to be binary. This method returns True if a null byte
+        is found or if more than 30% of the bytes in the sample are non-text.
+        """
+        try:
+            with open(file_path, 'rb') as f:
+                chunk = f.read(1024)
+            # If there's a null byte, it's almost certainly binary.
+            if b'\x00' in chunk:
+                return True
+            
+            # Define a set of text characters (ASCII printable + common control characters)
+            text_chars = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x7F)))
+            # Count non-text characters in the chunk.
+            non_text = sum(byte not in text_chars for byte in chunk)
+            if len(chunk) > 0 and (non_text / len(chunk)) > 0.30:
+                return True
+        except Exception:
+            # If the file cannot be read in binary mode, assume it's not binary.
+            return False
+        return False
 
     @staticmethod
     def is_gitignored(file_path, gitignore_data):
@@ -37,12 +62,12 @@ class DirectoryHandler:
             try:
                 rel_path = os.path.relpath(file_path, base_dir)
             except ValueError:
-                # file_path and base_dir are on different drives
+                # file_path and base_dir are on different drives.
                 continue
             # If the file is not under the current .gitignore base_dir, skip it.
             if rel_path.startswith('..'):
                 continue
-            # Check all patterns
+            # Check all patterns.
             for pattern in patterns:
                 if pattern.endswith('/'):
                     # Directory pattern: check if any folder in the relative path matches.
@@ -84,10 +109,15 @@ class DirectoryHandler:
         return False
 
     @staticmethod
-    def should_print_file(file_path, file_types, ignore_file_strings, ignore_hidden, path_contains, content_contains):
+    def should_print_file(file_path, file_types, ignore_file_strings, ignore_hidden, path_contains, content_contains, scan_binary_files=False):
         """
         Determines if a file should be printed based on various criteria.
+        By default, binary files are skipped unless scan_binary_files is True.
         """
+        # Check binary file status using our heuristic.
+        if not scan_binary_files and DirectoryHandler.is_binary_file(file_path):
+            return False
+
         if ignore_hidden and os.path.basename(file_path).startswith('.'):
             return False
 
@@ -148,7 +178,8 @@ class DirectoryHandler:
                     kwargs['ignore_file_strings'],
                     kwargs['ignore_hidden'],
                     kwargs['path_contains'],
-                    kwargs['content_contains']
+                    kwargs['content_contains'],
+                    scan_binary_files=kwargs.get('scan_binary_files', False)
                 ):
                     DirectoryHandler.print_file_content(file_path, kwargs['no_comments'], kwargs['compress'])
                 elif kwargs.get('verbose'):

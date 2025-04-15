@@ -4,6 +4,7 @@ import os
 import argparse
 import re
 import zlib
+import fnmatch
 
 class CodeProcessor:
     PYTHON = ".py"
@@ -59,6 +60,29 @@ class CodeProcessor:
 
 
 class DirectoryHandler:
+    
+    @staticmethod
+    def load_gitignore_patterns(root_path):
+        """Collect .gitignore patterns from root_path and all subdirectories."""
+        gitignore_patterns = []
+
+        for dirpath, dirnames, filenames in os.walk(root_path):
+            if '.gitignore' in filenames:
+                gitignore_path = os.path.join(dirpath, '.gitignore')
+                with open(gitignore_path, 'r') as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith('#'):
+                            gitignore_patterns.append(os.path.join(dirpath, line))
+        return gitignore_patterns
+
+    @staticmethod
+    def is_gitignored(file_path, gitignore_patterns):
+        """Check if file_path matches any .gitignore pattern."""
+        for pattern in gitignore_patterns:
+            if fnmatch.fnmatch(file_path, pattern):
+                return True
+        return False
     
     @staticmethod
     def filter_directories(dirs, ignore_file_strings, ignore_hidden):
@@ -143,13 +167,25 @@ class DirectoryHandler:
     @staticmethod
     def handle_directory(directory, **kwargs):
         """Handle scanning and printing for directories."""
+        gitignore_patterns = []
+        if not kwargs.get('no_gitignore'):
+            gitignore_patterns = DirectoryHandler.load_gitignore_patterns(directory)
+
         for root, dirs, files in os.walk(directory):
             DirectoryHandler.filter_directories(dirs, kwargs['ignore_file_strings'], kwargs['ignore_hidden'])
             for file in files:
-                if DirectoryHandler.should_print_file(os.path.join(root, file), kwargs['file_types'], kwargs['ignore_file_strings'], kwargs['ignore_hidden'], kwargs['path_contains'], kwargs['content_contains']):
-                    DirectoryHandler.print_file_content(os.path.join(root, file), kwargs['no_comments'], kwargs['compress'])
+                file_path = os.path.join(root, file)
+                
+                if gitignore_patterns and DirectoryHandler.is_gitignored(file_path, gitignore_patterns):
+                    if kwargs['verbose']:
+                        print(f"Skipped (gitignored): {file_path}")
+                    continue
+
+                if DirectoryHandler.should_print_file(file_path, kwargs['file_types'], kwargs['ignore_file_strings'], kwargs['ignore_hidden'], kwargs['path_contains'], kwargs['content_contains']):
+                    DirectoryHandler.print_file_content(file_path, kwargs['no_comments'], kwargs['compress'])
                 elif kwargs['verbose']:
-                    print(f"Skipped file: {file}")
+                    print(f"Skipped file: {file_path}")
+
 
     @staticmethod
     def handle_file(file_path, **kwargs):
@@ -168,6 +204,7 @@ def main():
     parser.add_argument("--compress", action='store_true', help="Compress code (for Python files).")
     parser.add_argument("--path-contains", nargs='+', default=[], help="Display files whose paths contain one of these strings.")
     parser.add_argument("--content-contains", nargs='+', default=[], help="Display files containing one of these strings in their content.")
+    parser.add_argument("--no-gitignore", action='store_true', help="Do not respect .gitignore files during scan.")
     
     args = parser.parse_args()
     

@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "analysis-ready-code"
+version = "0.1.0"
+description = "A utility that recursively scans directories and transforms source code into an analysis-ready format, removing comments and optionally compressing content."
+readme = "README.md"
+license = { text = "AGPL-3.0" }
+authors = [
+    { name = "Kevin Veen-Birkenbach", email = "kevin@veen.world" }
+]
+
+requires-python = ">=3.8"
+
+dependencies = [
+    # No dependencies needed for ARC
+]
+
+# Optional: define console script (if you ever want pip-installable CLI)
+# ARC normally uses a symlink, but this keeps it compatible with pip.
+[project.scripts]
+arc = "arc.__main__:main"
+
+[project.urls]
+Homepage = "https://github.com/kevinveenbirkenbach/analysis-ready-code"
+Source = "https://github.com/kevinveenbirkenbach/analysis-ready-code"
+Issues = "https://github.com/kevinveenbirkenbach/analysis-ready-code/issues"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["arc*"]
+
+[tool.setuptools.package-data]
+# if you need non-Python files inside packages
+arc = ["py.typed"]
+
+[tool.coverage.run]
+branch = true
+source = ["src/arc"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_unused_configs = true
+ignore_missing_imports = true

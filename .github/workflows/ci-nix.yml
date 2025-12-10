@@ -1,0 +1,38 @@
+name: Nix CI
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+
+jobs:
+  nix-tests:
+    name: Nix Build & Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Nix
+        uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+
+      - name: Build ARC with Nix
+        run: nix build .#arc
+
+      - name: Run flake checks
+        run: nix flake check --show-trace
+
+      - name: Run Makefile tests inside Nix environment
+        run: |
+          nix develop -c bash -c "make test"
+
+      # Changed step:
+      - name: Run arc --help via Nix app
+        run: |
+          nix run .#arc -- --help

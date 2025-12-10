@@ -6,13 +6,14 @@ import tempfile
 import unittest
 from contextlib import redirect_stdout
 
-# Ensure project root is on sys.path when running via discover
+# Ensure src/ is on sys.path when running via discover
 PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-if PROJECT_ROOT not in sys.path:
-    sys.path.insert(0, PROJECT_ROOT)
+SRC_ROOT = os.path.join(PROJECT_ROOT, "src")
+if SRC_ROOT not in sys.path:
+    sys.path.insert(0, SRC_ROOT)
 
-from code_processor import CodeProcessor
-from directory_handler import DirectoryHandler
+from arc.code_processor import CodeProcessor
+from arc.directory_handler import DirectoryHandler
 
 
 class TestCodeProcessor(unittest.TestCase):
@@ -35,7 +36,7 @@ def f():
         self.assertNotIn("# a comment", out)
         # tolerate whitespace normalization from tokenize.untokenize
         self.assertRegex(out, r'y\s*=\s*"string with # not a comment"')
-        self.assertIn('triple quoted but not a docstring', out)
+        self.assertIn("triple quoted but not a docstring", out)
 
     def test_cstyle_comment_stripping(self):
         src = '''\
@@ -170,8 +171,12 @@ class TestDirectoryHandler(unittest.TestCase):
             with open(p, "w") as f:
                 f.write("# comment only\nx=1\n")
             buf = io.StringIO()
-            with redirect_stdout(buf):
-                DirectoryHandler.print_file_content(p, no_comments=True, compress=False)
+            DirectoryHandler.print_file_content(
+                p,
+                no_comments=True,
+                compress=False,
+                output_stream=buf,
+            )
             out = buf.getvalue()
             self.assertIn("<< START:", out)
             # be whitespace-tolerant (tokenize may insert spaces)
@@ -179,8 +184,12 @@ class TestDirectoryHandler(unittest.TestCase):
             self.assertNotIn("# comment only", out)
 
             buf = io.StringIO()
-            with redirect_stdout(buf):
-                DirectoryHandler.print_file_content(p, no_comments=True, compress=True)
+            DirectoryHandler.print_file_content(
+                p,
+                no_comments=True,
+                compress=True,
+                output_stream=buf,
+            )
             out = buf.getvalue()
             self.assertIn("COMPRESSED CODE:", out)
             self.assertIn("<< END >>", out)

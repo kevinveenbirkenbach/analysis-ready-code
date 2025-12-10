@@ -1,1 +1,3 @@
 *__pycache__*
+build/
+src/analysis_ready_code.egg-info/

@@ -1,9 +1,9 @@
+import io
 import re
+import tokenize
 import zlib
 from dataclasses import dataclass
 from typing import Dict, Tuple, Pattern, Optional
-import io
-import tokenize
 
 
 @dataclass(frozen=True)
